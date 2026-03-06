@@ -290,6 +290,10 @@ class Elementor_MCP_Admin {
 				   class="nav-tab <?php echo esc_attr( 'prompts' === $active_tab ? 'nav-tab-active' : '' ); ?>">
 					<?php esc_html_e( 'Prompts', 'elementor-mcp' ); ?>
 				</a>
+				<a href="<?php echo esc_url( admin_url( 'options-general.php?page=' . self::PAGE_SLUG . '&tab=changelog' ) ); ?>"
+				   class="nav-tab <?php echo esc_attr( 'changelog' === $active_tab ? 'nav-tab-active' : '' ); ?>">
+					<?php esc_html_e( 'Changelog', 'elementor-mcp' ); ?>
+				</a>
 			</nav>
 
 			<!-- Content -->
@@ -299,6 +303,8 @@ class Elementor_MCP_Admin {
 					include ELEMENTOR_MCP_DIR . 'includes/admin/views/page-connection.php';
 				} elseif ( 'prompts' === $active_tab ) {
 					include ELEMENTOR_MCP_DIR . 'includes/admin/views/page-prompts.php';
+				} elseif ( 'changelog' === $active_tab ) {
+					include ELEMENTOR_MCP_DIR . 'includes/admin/views/page-changelog.php';
 				} else {
 					include ELEMENTOR_MCP_DIR . 'includes/admin/views/page-tools.php';
 				}
