@@ -6,10 +6,12 @@
  * to the WordPress MCP Adapter HTTP endpoint.
  *
  * Environment variables:
- *   WP_URL          (required) WordPress site URL, e.g. http://mysite.test
- *   WP_USERNAME     (required) WordPress username
- *   WP_APP_PASSWORD (required) WordPress Application Password
- *   MCP_LOG_FILE    (optional) Path to a log file for debugging
+ *   WP_URL               (required) WordPress site URL, e.g. http://mysite.test
+ *   WP_USERNAME          (required) WordPress username
+ *   WP_APP_PASSWORD      (required) WordPress Application Password
+ *   MCP_LOG_FILE         (optional) Path to a log file for debugging
+ *   MCP_PROTOCOL_VERSION (optional) Override protocolVersion in initialize responses.
+ *                                   Set to "2024-11-05" if your client doesn't support "2025-06-18".
  *
  * Usage:
  *   node bin/mcp-proxy.mjs
@@ -34,6 +36,7 @@ const WP_URL = process.env.WP_URL?.replace(/\/+$/, '') || '';
 const WP_USERNAME = process.env.WP_USERNAME || '';
 const WP_APP_PASSWORD = process.env.WP_APP_PASSWORD || '';
 const MCP_LOG_FILE = process.env.MCP_LOG_FILE || '';
+const MCP_PROTOCOL_VERSION = process.env.MCP_PROTOCOL_VERSION || '';
 const MCP_REST_PATH = '/mcp/elementor-mcp-server';
 
 if (!WP_URL) {
@@ -69,6 +72,21 @@ function logStderr(message) {
       appendFileSync(MCP_LOG_FILE, line + '\n');
     } catch { /* ignore log write failures */ }
   }
+}
+
+/**
+ * Logs a message only to the log file (not stderr).
+ * Useful for verbose data like response bodies that would pollute stderr.
+ *
+ * @param {string} message  Log message.
+ */
+function logFileOnly(message) {
+  if (!MCP_LOG_FILE) return;
+  const ts = new Date().toISOString();
+  const line = `[${ts}] ${message}`;
+  try {
+    appendFileSync(MCP_LOG_FILE, line + '\n');
+  } catch { /* ignore log write failures */ }
 }
 
 // ---------------------------------------------------------------------------
@@ -268,12 +286,45 @@ async function handleMessage(line) {
       return;
     }
 
-    // Forward the response as-is to stdout.
-    // The MCP adapter returns proper JSON-RPC responses.
+    // Forward the response to stdout, applying any protocol version override.
     const trimmed = body.trim();
     if (trimmed) {
-      process.stdout.write(trimmed + '\n');
-      logStderr(`← response (${trimmed.length} bytes)`);
+      let output = trimmed;
+
+      // Parse response for protocol version override and enhanced logging.
+      try {
+        const parsed = JSON.parse(trimmed);
+
+        // Override protocolVersion in initialize responses if env var is set.
+        if (method === 'initialize' && MCP_PROTOCOL_VERSION && parsed.result?.protocolVersion) {
+          const original = parsed.result.protocolVersion;
+          parsed.result.protocolVersion = MCP_PROTOCOL_VERSION;
+          output = JSON.stringify(parsed);
+          logStderr(`Protocol version override: ${original} → ${MCP_PROTOCOL_VERSION}`);
+        }
+
+        // Log initialize response details for diagnostics.
+        if (method === 'initialize' && parsed.result) {
+          logStderr(`Server: ${parsed.result.serverInfo?.name || 'unknown'} v${parsed.result.serverInfo?.version || '?'}`);
+          logStderr(`Protocol: ${parsed.result.protocolVersion || 'unknown'}`);
+        }
+
+        // Log tools count from tools/list responses.
+        if (method === 'tools/list' && parsed.result?.tools) {
+          logStderr(`Tools discovered: ${parsed.result.tools.length}`);
+        }
+      } catch {
+        // Response is not valid JSON or doesn't have expected structure — forward as-is.
+      }
+
+      // Log full response body to file when MCP_LOG_FILE is set (not to stderr).
+      if (MCP_LOG_FILE) {
+        const maxLog = method === 'tools/call' ? 500 : output.length;
+        logFileOnly(`← ${method} response: ${output.substring(0, maxLog)}`);
+      }
+
+      process.stdout.write(output + '\n');
+      logStderr(`← response (${output.length} bytes)`);
     }
   } catch (err) {
     logStderr(`← error: ${err.message}`);
@@ -301,6 +352,9 @@ logStderr(`MCP Tools for Elementor proxy starting`);
 logStderr(`WordPress URL: ${WP_URL}`);
 logStderr(`REST path: ${MCP_REST_PATH}`);
 logStderr(`User: ${WP_USERNAME}`);
+if (MCP_PROTOCOL_VERSION) {
+  logStderr(`Protocol version override: ${MCP_PROTOCOL_VERSION}`);
+}
 
 const rl = createInterface({
   input: process.stdin,

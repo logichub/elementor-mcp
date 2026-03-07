@@ -153,6 +153,8 @@ class Elementor_MCP_Admin {
 			array(
 				'copied'      => __( 'Copied!', 'elementor-mcp' ),
 				'mcpEndpoint' => rest_url( 'mcp/elementor-mcp-server' ),
+				'siteUrl'     => site_url(),
+				'proxyPath'   => ELEMENTOR_MCP_DIR . 'bin' . DIRECTORY_SEPARATOR . 'mcp-proxy.mjs',
 			)
 		);
 	}

@@ -36,6 +36,26 @@
     }
   },
 
+  "claude_code_remote_proxy": {
+    "_description": "Claude Code — remote WordPress via Node.js HTTP proxy with optional protocol version override",
+    "mcpServers": {
+      "elementor-mcp": {
+        "type": "stdio",
+        "command": "node",
+        "args": [
+          "/path/to/wp-content/plugins/elementor-mcp/bin/mcp-proxy.mjs"
+        ],
+        "env": {
+          "WP_URL": "https://your-site.com",
+          "WP_USERNAME": "admin",
+          "WP_APP_PASSWORD": "xxxx xxxx xxxx xxxx xxxx xxxx",
+          "MCP_PROTOCOL_VERSION": "2024-11-05",
+          "MCP_LOG_FILE": ""
+        }
+      }
+    }
+  },
+
   "claude_code_mcp_json": {
     "_description": "Claude Code — place as .mcp.json in project root",
     "mcpServers": {

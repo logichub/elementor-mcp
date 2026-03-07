@@ -141,8 +141,70 @@
 			}
 
 			var endpoint = elementorMcpAdmin.mcpEndpoint;
+			var siteUrl = elementorMcpAdmin.siteUrl || '';
+			var proxyPath = elementorMcpAdmin.proxyPath || '';
+			var rawUsername = username.value.trim();
+			var rawAppPassword = appPassword.value.trim();
 
-			// Show the config blocks container.
+			// Show the proxy config blocks container.
+			var proxyConfigsDiv = document.getElementById( 'elementor-mcp-proxy-configs' );
+			if ( proxyConfigsDiv ) {
+				proxyConfigsDiv.style.display = '';
+			}
+
+			// Use the absolute filesystem path from the server.
+			var fullProxyPath = proxyPath;
+
+			// Determine a sensible log file path based on OS.
+			var isWindows = fullProxyPath.indexOf( '\\' ) !== -1 || fullProxyPath.match( /^[A-Z]:/i );
+			var logFilePath = isWindows ? 'C:\\tmp\\elementor-mcp-debug.log' : '/tmp/elementor-mcp-debug.log';
+
+			// Claude Code proxy config (.mcp.json) — uses type: stdio with Node.js proxy.
+			var claudeCodeProxyConfig = {
+				mcpServers: {
+					'elementor-mcp': {
+						type: 'stdio',
+						command: 'node',
+						args: [ fullProxyPath ],
+						env: {
+							WP_URL: siteUrl,
+							WP_USERNAME: rawUsername,
+							WP_APP_PASSWORD: rawAppPassword,
+							MCP_PROTOCOL_VERSION: '2024-11-05',
+							MCP_LOG_FILE: logFilePath
+						}
+					}
+				}
+			};
+			setConfigBlock(
+				'elementor-mcp-claude-code-proxy-code',
+				'claude-code-proxy',
+				JSON.stringify( claudeCodeProxyConfig, null, 4 )
+			);
+
+			// Claude Desktop proxy config — same but without type field.
+			var claudeDesktopProxyConfig = {
+				mcpServers: {
+					'elementor-mcp': {
+						command: 'node',
+						args: [ fullProxyPath ],
+						env: {
+							WP_URL: siteUrl,
+							WP_USERNAME: rawUsername,
+							WP_APP_PASSWORD: rawAppPassword,
+							MCP_PROTOCOL_VERSION: '2024-11-05',
+							MCP_LOG_FILE: logFilePath
+						}
+					}
+				}
+			};
+			setConfigBlock(
+				'elementor-mcp-claude-desktop-proxy-code',
+				'claude-desktop-proxy',
+				JSON.stringify( claudeDesktopProxyConfig, null, 4 )
+			);
+
+			// Show the HTTP config blocks container.
 			var configsDiv = document.getElementById( 'elementor-mcp-http-configs' );
 			if ( configsDiv ) {
 				configsDiv.style.display = '';

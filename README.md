@@ -173,6 +173,34 @@ For local development with WP-CLI available, you can use the stdio transport (no
 }
 ```
 
+### Node.js proxy (remote sites or protocol compatibility)
+
+For remote WordPress sites, environments without WP-CLI, or when your AI client needs a different MCP protocol version, use the bundled Node.js proxy:
+
+```json
+{
+    "mcpServers": {
+        "elementor-mcp": {
+            "type": "stdio",
+            "command": "node",
+            "args": ["/path/to/wp-content/plugins/elementor-mcp/bin/mcp-proxy.mjs"],
+            "env": {
+                "WP_URL": "https://your-site.com",
+                "WP_USERNAME": "admin",
+                "WP_APP_PASSWORD": "xxxx xxxx xxxx xxxx xxxx xxxx"
+            }
+        }
+    }
+}
+```
+
+**Optional environment variables:**
+
+| Variable | Description |
+|---|---|
+| `MCP_LOG_FILE` | Path to a debug log file (e.g., `/tmp/elementor-mcp.log`) |
+| `MCP_PROTOCOL_VERSION` | Override the protocol version in initialize responses (e.g., `2024-11-05`). Use this if your client doesn't support `2025-06-18`. |
+
 ### Testing with MCP Inspector
 
 ```bash
@@ -345,9 +373,42 @@ npx @modelcontextprotocol/inspector wp mcp-adapter serve \
 
 ## Troubleshooting
 
-- **"No MCP servers registered"** — Ensure the MCP Tools for Elementor plugin is active and all dependencies are met.
+### Tools not appearing in your AI client
+
+If the MCP server connects but no tools appear in Claude Code, Cursor, or other clients:
+
+1. **Verify tools are registered.** Test the endpoint directly with curl to confirm the server returns tools:
+   ```bash
+   curl -s -u admin:YOUR_APP_PASSWORD \
+     https://your-site.com/wp-json/mcp/elementor-mcp-server \
+     -H "Content-Type: application/json" \
+     -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}'
+   ```
+   If this returns a valid JSON-RPC response with `serverInfo`, the server is working. The issue is likely a protocol version mismatch between the server and your client.
+
+2. **Check for protocol version mismatch.** The WordPress MCP Adapter reports protocol version `2025-06-18`. Some clients only support `2024-11-05`. If using the Node.js proxy, set the `MCP_PROTOCOL_VERSION` environment variable to override:
+   ```json
+   "env": {
+       "MCP_PROTOCOL_VERSION": "2024-11-05"
+   }
+   ```
+
+3. **Enable debug logging.** Add the `MCP_LOG_FILE` environment variable to your proxy config to capture the full request/response flow:
+   ```json
+   "env": {
+       "MCP_LOG_FILE": "/tmp/elementor-mcp-debug.log"
+   }
+   ```
+   The log will show the protocol version, session IDs, tools count, and response bodies.
+
+4. **Use the proxy instead of direct HTTP.** If you're using `type: "http"` to connect directly, your client must handle `Mcp-Session-Id` headers. Clients that don't support session management should use the Node.js proxy instead, which handles sessions automatically.
+
+### Common errors
+
+- **"No MCP servers registered"** — Ensure the MCP Tools for Elementor plugin is active and all dependencies (Elementor, MCP Adapter, Abilities API) are met.
 - **HTTP 401** — Check your Application Password is correct and the user has `edit_posts` capability.
-- **Session errors** — The HTTP endpoint requires `Mcp-Session-Id` header after `initialize`; the proxy handles this automatically.
+- **"Missing Mcp-Session-Id header"** — The HTTP endpoint requires an `Mcp-Session-Id` header on all requests after `initialize`. Use the Node.js proxy (which handles this automatically) instead of direct HTTP connections.
+- **Session errors** — If connecting via direct HTTP, your client must capture the `Mcp-Session-Id` response header from `initialize` and include it on all subsequent requests.
 - **WP-CLI not found on Windows** — Use the full path to `php.exe` and `wp-cli.phar`.
 
 ## Sample Prompts

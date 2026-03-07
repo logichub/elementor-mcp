@@ -125,11 +125,45 @@ $elementor_mcp_has_adapter   = class_exists( '\WP\MCP\Core\McpAdapter' );
 			</div>
 		</div>
 
+		<div id="elementor-mcp-proxy-configs" style="display: none;">
+
+			<h3><?php esc_html_e( 'Step 2: Node.js Proxy Configs (Recommended)', 'elementor-mcp' ); ?></h3>
+			<p class="description">
+				<?php esc_html_e( 'These configs use the bundled Node.js proxy which handles session management and protocol version compatibility automatically. Requires Node.js 18+ installed on the machine running your AI client.', 'elementor-mcp' ); ?>
+			</p>
+
+			<!-- Claude Code (Proxy) -->
+			<div class="elementor-mcp-config-card">
+				<div class="elementor-mcp-config-card-header">
+					<span class="elementor-mcp-config-card-title"><?php esc_html_e( 'Claude Code', 'elementor-mcp' ); ?> <span style="font-weight: 400; color: var(--mcp-gray-400);">&mdash; .mcp.json</span></span>
+					<button type="button" class="button elementor-mcp-copy-btn" data-target="claude-code-proxy"><?php esc_html_e( 'Copy', 'elementor-mcp' ); ?></button>
+				</div>
+				<pre><code id="elementor-mcp-claude-code-proxy-code"></code></pre>
+				<textarea id="claude-code-proxy" class="elementor-mcp-copy-source"></textarea>
+			</div>
+
+			<!-- Claude Desktop (Proxy) -->
+			<div class="elementor-mcp-config-card">
+				<div class="elementor-mcp-config-card-header">
+					<span class="elementor-mcp-config-card-title"><?php esc_html_e( 'Claude Desktop', 'elementor-mcp' ); ?> <span style="font-weight: 400; color: var(--mcp-gray-400);">&mdash; claude_desktop_config.json</span></span>
+					<button type="button" class="button elementor-mcp-copy-btn" data-target="claude-desktop-proxy"><?php esc_html_e( 'Copy', 'elementor-mcp' ); ?></button>
+				</div>
+				<pre><code id="elementor-mcp-claude-desktop-proxy-code"></code></pre>
+				<textarea id="claude-desktop-proxy" class="elementor-mcp-copy-source"></textarea>
+			</div>
+
+			<p class="description">
+				<strong><?php esc_html_e( 'Note:', 'elementor-mcp' ); ?></strong>
+				<?php esc_html_e( 'Replace the proxy path with the absolute path to bin/mcp-proxy.mjs in your plugin installation directory.', 'elementor-mcp' ); ?>
+			</p>
+
+		</div>
+
 		<div id="elementor-mcp-http-configs" style="display: none;">
 
-			<h3><?php esc_html_e( 'Step 2: Copy Your Config', 'elementor-mcp' ); ?></h3>
+			<h3><?php esc_html_e( 'Step 3: Direct HTTP Configs (Advanced)', 'elementor-mcp' ); ?></h3>
 			<p class="description">
-				<?php esc_html_e( 'Choose the config for your AI client and paste it into the appropriate config file.', 'elementor-mcp' ); ?>
+				<?php esc_html_e( 'Direct HTTP connections require your AI client to handle session management (Mcp-Session-Id headers). Use only if the Node.js proxy is not an option.', 'elementor-mcp' ); ?>
 			</p>
 
 			<!-- Claude Code -->
