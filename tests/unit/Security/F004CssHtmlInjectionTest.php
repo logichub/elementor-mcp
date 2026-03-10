@@ -58,11 +58,10 @@ class F004CssHtmlInjectionTest extends TestCase {
 	 * Source: includes/abilities/class-custom-code-abilities.php:209–210
 	 */
 	private function apply_current_sanitization( string $css ): string {
-		// Line 209:
-		$css = preg_replace( '/<\?(=|php)(.+?)\?>/is', '', $css );
-		// Line 210:
-		$css = preg_replace( '/<script[^>]*>.*?<\/script>/is', '', $css );
-		return $css;
+		// Updated to match fixed source (F-004): single angle-bracket strip replaces
+		// the prior two-regex approach. Valid CSS never contains < or >.
+		// Source: includes/abilities/class-custom-code-abilities.php
+		return preg_replace( '/[<>]/', '', $css );
 	}
 
 	/**

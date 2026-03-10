@@ -450,8 +450,9 @@ class Elementor_MCP_Svg_Icon_Abilities {
 			);
 		}
 
-		// Remove event handlers (on*="...").
-		$content = preg_replace( '/\s+on\w+\s*=\s*(["\']).*?\1/i', '', $content );
+		// Fix: F-008 add /s flag so . matches newlines — prevents split-line event handler bypass
+		// see docs/issues/f008-svg-dotall-bypass.md
+		$content = preg_replace( '/\s+on\w+\s*=\s*(["\']).*?\1/is', '', $content );
 
 		// Remove javascript: URLs.
 		$content = preg_replace( '/javascript\s*:/i', '', $content );

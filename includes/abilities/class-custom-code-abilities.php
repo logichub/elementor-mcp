@@ -205,9 +205,9 @@ class Elementor_MCP_Custom_Code_Abilities {
 			return new \WP_Error( 'missing_params', __( 'post_id and css are required.', 'elementor-mcp' ) );
 		}
 
-		// Basic sanitization: strip PHP tags and script tags.
-		$css = preg_replace( '/<\?(=|php)(.+?)\?>/is', '', $css );
-		$css = preg_replace( '/<script[^>]*>.*?<\/script>/is', '', $css );
+		// Fix: F-004 strip angle brackets — valid CSS never requires them, prevents </style> injection
+		// see docs/issues/f004-stored-xss-custom-css.md
+		$css = preg_replace( '/[<>]/', '', $css );
 
 		if ( ! empty( $element_id ) ) {
 			// Element-level custom CSS.

@@ -57,7 +57,9 @@ class F008SvgRegexDotallTest extends TestCase {
 	 * Source: includes/abilities/class-svg-icon-abilities.php:454
 	 */
 	private function apply_current_event_handler_strip( string $content ): string {
-		return preg_replace( '/\s+on\w+\s*=\s*(["\']).*?\1/i', '', $content );
+		// Updated to match fixed source (F-008): /s flag added so . matches newlines.
+		// Source: includes/abilities/class-svg-icon-abilities.php
+		return preg_replace( '/\s+on\w+\s*=\s*(["\']).*?\1/is', '', $content );
 	}
 
 	/**
