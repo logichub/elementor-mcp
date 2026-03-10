@@ -203,7 +203,9 @@ class Elementor_MCP_Data {
 		// Attempt native Elementor save (handles CSS regen, cache busting).
 		$result = $document->save( array( 'elements' => $data ) );
 
-		if ( false === $result ) {
+		// Fix: F-005 use ! instead of false === to catch null returns from Document::save()
+		// see docs/issues/f005-silent-data-loss-null-return.md
+		if ( ! $result ) {
 			// Fallback: direct meta write for non-browser contexts (CLI, REST proxy).
 			$json = wp_json_encode( $data );
 
@@ -257,7 +259,9 @@ class Elementor_MCP_Data {
 
 		$result = $document->save( array( 'settings' => $settings ) );
 
-		if ( false === $result ) {
+		// Fix: F-005 use ! instead of false === to catch null returns from Document::save()
+		// see docs/issues/f005-silent-data-loss-null-return.md
+		if ( ! $result ) {
 			// Fallback: merge settings into existing page settings meta.
 			$existing = get_post_meta( $post_id, '_elementor_page_settings', true );
 			if ( ! is_array( $existing ) ) {
